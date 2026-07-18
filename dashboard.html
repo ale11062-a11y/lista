@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Orçamentos</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <h1 class="logo">📋 App de Orçamentos</h1>
+        </div>
+        <div class="header-right">
+            <span id="usuarioNome" class="usuario-info"></span>
+            <button id="btnSair" class="btn-sair">Sair</button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <!-- Seção de Novo Orçamento -->
+        <section class="nova-orcamento-section">
+            <h2>Novo Orçamento</h2>
+            
+            <!-- Dados do Cliente -->
+            <div class="cliente-section">
+                <h3>Dados do Cliente</h3>
+                <form id="formCliente" class="form-cliente">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clienteNome">Nome do Cliente</label>
+                            <input type="text" id="clienteNome" required placeholder="Nome completo">
+                        </div>
+                        <div class="form-group">
+                            <label for="clienteEmail">Email</label>
+                            <input type="email" id="clienteEmail" required placeholder="email@exemplo.com">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clienteTelefone">Telefone</label>
+                            <input type="tel" id="clienteTelefone" required placeholder="(11) 9999-9999">
+                        </div>
+                        <div class="form-group">
+                            <label for="clienteEndereco">Endereço</label>
+                            <input type="text" id="clienteEndereco" required placeholder="Rua, número, bairro">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clienteCidade">Cidade</label>
+                            <input type="text" id="clienteCidade" required placeholder="Cidade">
+                        </div>
+                        <div class="form-group">
+                            <label for="dataOrcamento">Data do Orçamento</label>
+                            <input type="date" id="dataOrcamento" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Upload de Mídia -->
+            <div class="midia-section">
+                <h3>Anexar Fotos e Vídeos</h3>
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="fileInput" multiple accept="image/*,video/*" style="display:none">
+                    <p>Clique para adicionar fotos ou vídeos</p>
+                </div>
+                <div id="midiaLista" class="midia-lista"></div>
+            </div>
+
+            <!-- Itens do Orçamento -->
+            <div class="itens-section">
+                <h3>Itens do Orçamento</h3>
+                
+                <div class="form-item" id="formNovoItem">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="itemQuantidade">Quantidade</label>
+                            <input type="number" id="itemQuantidade" min="1" value="1" placeholder="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="itemDescricao">Descrição</label>
+                            <input type="text" id="itemDescricao" placeholder="Descrição do serviço/produto">
+                        </div>
+                        <div class="form-group">
+                            <label for="itemValor">Valor Unitário (R$)</label>
+                            <input type="number" id="itemValor" min="0" step="0.01" placeholder="0.00">
+                        </div>
+                        <button type="button" id="btnAdicionarItem" class="btn-adicionar">Adicionar Item</button>
+                    </div>
+                </div>
+
+                <!-- Tabela de Itens -->
+                <div class="tabela-container">
+                    <table id="tabelaItens" class="tabela-itens">
+                        <thead>
+                            <tr>
+                                <th>Quantidade</th>
+                                <th>Descrição</th>
+                                <th>Valor Unitário</th>
+                                <th>Subtotal</th>
+                                <th>Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpoTabela">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Total do Orçamento -->
+            <div class="total-section">
+                <div class="total-box">
+                    <label>Valor Total do Orçamento:</label>
+                    <div class="total-valor">R$ <span id="valorTotal">0.00</span></div>
+                </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="botoes-acao">
+                <button id="btnLimpar" class="btn-secundario">Limpar Tudo</button>
+                <button id="btnSalvar" class="btn-primario">Salvar Orçamento</button>
+                <button id="btnPDF" class="btn-primario">Gerar PDF</button>
+            </div>
+        </section>
+
+        <!-- Seção de Orçamentos Salvos -->
+        <section class="orcamentos-salvos-section">
+            <h2>Orçamentos Salvos</h2>
+            <div id="listaOrcamentos" class="lista-orcamentos"></div>
+        </section>
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/auth.js"></script>
+    <script src="js/orcamento.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
