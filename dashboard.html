@@ -98,6 +98,7 @@
         <div class="header-right">
             <span id="usuarioNome" class="usuario-info"></span>
             <button id="btnAdmin" class="btn-admin" style="display: none;">⚙️ Admin</button>
+            <button id="btnPersonalizar" class="btn-admin" style="background-color: #0066cc;">🎨 Personalizar</button>
             <button id="btnSair" class="btn-sair">Sair</button>
         </div>
     </header>
@@ -121,6 +122,46 @@
                     <input type="password" id="confirmarSenha" required placeholder="Confirme a nova senha">
                 </div>
                 <button type="submit">Atualizar Senha</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Personalização -->
+    <div id="personalizarModal" class="senha-modal">
+        <div class="senha-modal-content" style="max-width: 500px;">
+            <h2>🎨 Personalizar App</h2>
+            <form id="formPersonalizar">
+                <div class="form-group">
+                    <label for="persNomeEmpresa">Nome da Empresa</label>
+                    <input type="text" id="persNomeEmpresa" placeholder="Nome da empresa">
+                </div>
+                <div class="form-group">
+                    <label for="persNomeApp">Nome do App</label>
+                    <input type="text" id="persNomeApp" placeholder="Nome do app">
+                </div>
+                <div class="form-group">
+                    <label for="persEmail">Email de Contato</label>
+                    <input type="email" id="persEmail" placeholder="contato@empresa.com">
+                </div>
+                <div class="form-group">
+                    <label for="persTelefone">Telefone</label>
+                    <input type="text" id="persTelefone" placeholder="(11) 0000-0000">
+                </div>
+                <div class="form-group">
+                    <label for="persCorPrimaria">Cor Primária</label>
+                    <input type="color" id="persCorPrimaria" value="#0066cc" style="width: 100%; height: 40px;">
+                </div>
+                <div class="form-group">
+                    <label for="persCorSecundaria">Cor Secundária</label>
+                    <input type="color" id="persCorSecundaria" value="#7a7a7a" style="width: 100%; height: 40px;">
+                </div>
+                <div class="form-group">
+                    <label for="persLogoFile">Logo (arquivo)</label>
+                    <input type="file" id="persLogoFile" accept="image/*" style="margin-bottom: 8px;">
+                    <input type="text" id="persLogo" placeholder="Ou cole a URL da imagem">
+                </div>
+                <button type="submit">Salvar Personalização</button>
+                <button type="button" id="btnFecharPersonalizar" style="background: #ccc; margin-top: 8px;">Cancelar</button>
             </form>
         </div>
     </div>
@@ -244,6 +285,7 @@
     </main>
 
     <!-- Scripts -->
+    <script src="js/branding.js"></script>
     <script src="js/auth-secure.js"></script>
     <script src="js/orcamento-isolado.js"></script>
     <script src="js/main.js"></script>
@@ -255,7 +297,7 @@
                 document.getElementById('senhaModal').classList.add('show');
             }
 
-            // Mostrar botão admin se for admin (para futuro)
+            // Mostrar botão admin se for admin
             const usuario = obterUsuarioAutenticado();
             if (usuario && usuario.papel === 'admin') {
                 document.getElementById('btnAdmin').style.display = 'block';
@@ -264,6 +306,58 @@
 
             // Inicializar orçamentos
             inicializarOrcamentos();
+
+            // === PERSONALIZAÇÃO (disponível para todos os usuários) ===
+
+            // Abrir modal de personalização
+            document.getElementById('btnPersonalizar').addEventListener('click', function() {
+                const config = obterConfigBranding();
+                document.getElementById('persNomeEmpresa').value = config.nomeEmpresa || '';
+                document.getElementById('persNomeApp').value = config.nomeApp || '';
+                document.getElementById('persEmail').value = config.email || '';
+                document.getElementById('persTelefone').value = config.telefone || '';
+                document.getElementById('persCorPrimaria').value = config.corPrimaria || '#0066cc';
+                document.getElementById('persCorSecundaria').value = config.corSecundaria || '#7a7a7a';
+                document.getElementById('persLogo').value = config.logo || '';
+                document.getElementById('personalizarModal').classList.add('show');
+            });
+
+            // Fechar modal
+            document.getElementById('btnFecharPersonalizar').addEventListener('click', function() {
+                document.getElementById('personalizarModal').classList.remove('show');
+            });
+
+            // Upload de logo por arquivo
+            document.getElementById('persLogoFile').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        document.getElementById('persLogo').value = ev.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Salvar personalização
+            document.getElementById('formPersonalizar').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const config = {
+                    nomeEmpresa: document.getElementById('persNomeEmpresa').value,
+                    nomeApp: document.getElementById('persNomeApp').value,
+                    email: document.getElementById('persEmail').value,
+                    telefone: document.getElementById('persTelefone').value,
+                    endereco: obterConfigBranding().endereco || '',
+                    logo: document.getElementById('persLogo').value || null,
+                    corPrimaria: document.getElementById('persCorPrimaria').value,
+                    corSecundaria: document.getElementById('persCorSecundaria').value,
+                    corPainelPDF: document.getElementById('persCorPrimaria').value
+                };
+                salvarConfigBranding(config);
+                alert('✅ Personalização salva com sucesso!');
+                document.getElementById('personalizarModal').classList.remove('show');
+                setTimeout(() => location.reload(), 300);
+            });
         });
 
         // Evento de alteração de senha
