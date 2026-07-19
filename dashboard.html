@@ -284,9 +284,9 @@
         </section>
     </main>
 
-    <!-- Scripts -->
-    <script src="js/branding.js"></script>
+    <!-- Scripts (auth-secure.js antes de branding.js) -->
     <script src="js/auth-secure.js"></script>
+    <script src="js/branding.js"></script>
     <script src="js/orcamento-isolado.js"></script>
     <script src="js/main.js"></script>
     <script>
@@ -306,6 +306,9 @@
 
             // Inicializar orçamentos
             inicializarOrcamentos();
+
+            // Reaplicar branding do usuário atual
+            inicializarBranding();
 
             // === PERSONALIZAÇÃO (disponível para todos os usuários) ===
 
@@ -339,7 +342,7 @@
                 }
             });
 
-            // Salvar personalização
+            // Salvar personalização (salva no localStorage específico do usuário)
             document.getElementById('formPersonalizar').addEventListener('submit', function(e) {
                 e.preventDefault();
                 const config = {
