@@ -1,4 +1,4 @@
-// Sistema de Personalização e Branding
+// Sistema de Personalização e Branding (Por Usuário)
 
 // Cores padrão (azul + cinza prateado)
 const coresPadrao = {
@@ -8,29 +8,52 @@ const coresPadrao = {
     fundo: '#f5f5f5'
 };
 
-// Obter configurações de branding
+// Configuração padrão global (CAST)
+const configPadrao = {
+    nomeEmpresa: 'CAST',
+    nomeApp: 'ORÇAMENTO EXPRESSO',
+    email: 'contato@castservicos.com',
+    telefone: '(11) 0000-0000',
+    endereco: '',
+    logo: null,
+    corPrimaria: coresPadrao.primaria,
+    corSecundaria: coresPadrao.secundaria,
+    corPainelPDF: coresPadrao.primaria
+};
+
+// Obter ID do usuário autenticado (se houver)
+function obterUsuarioIdAtual() {
+    return sessionStorage.getItem('usuarioAutenticado') || null;
+}
+
+// Obter chave de branding específica do usuário
+function obterChaveBranding() {
+    const userId = obterUsuarioIdAtual();
+    if (userId) {
+        return 'config_branding_' + userId;
+    }
+    return 'config_branding'; // global (página de login)
+}
+
+// Obter configurações de branding do usuário atual
 function obterConfigBranding() {
-    const config = localStorage.getItem('config_branding');
+    const chave = obterChaveBranding();
+    const config = localStorage.getItem(chave);
     if (config) {
         return JSON.parse(config);
     }
-    // Padrão na primeira vez
-    return {
-        nomeEmpresa: 'CAST',
-        nomeApp: 'ORÇAMENTO EXPRESSO',
-        email: 'contato@castservicos.com',
-        telefone: '(11) 0000-0000',
-        endereco: '',
-        logo: null,
-        corPrimaria: coresPadrao.primaria,
-        corSecundaria: coresPadrao.secundaria,
-        corPainelPDF: coresPadrao.primaria
-    };
+    // Se não tem config do usuário, tenta a global, senão usa padrão
+    const configGlobal = localStorage.getItem('config_branding');
+    if (configGlobal) {
+        return JSON.parse(configGlobal);
+    }
+    return { ...configPadrao };
 }
 
-// Salvar configurações de branding
+// Salvar configurações de branding do usuário atual
 function salvarConfigBranding(config) {
-    localStorage.setItem('config_branding', JSON.stringify(config));
+    const chave = obterChaveBranding();
+    localStorage.setItem(chave, JSON.stringify(config));
     aplicarTema();
     return { sucesso: true, mensagem: 'Configurações salvas com sucesso!' };
 }
