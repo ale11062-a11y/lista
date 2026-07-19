@@ -190,16 +190,21 @@ if (document.getElementById('loginForm')) {
     });
 }
 
-// Verificar autenticação no dashboard
+// Verificar autenticação no dashboard e admin (CORRIGIDO)
 if (document.getElementById('btnSair')) {
     if (!verificarAutenticacao()) {
         window.location.href = 'index.html';
     } else {
         const usuario = obterUsuarioAutenticado();
         if (usuario) {
-            document.getElementById('usuarioNome').textContent = '👤 ' + usuario.nome;
+            // Define o nome do usuário apenas se o elemento existir
+            const elNome = document.getElementById('usuarioNome');
+            if (elNome) {
+                elNome.textContent = '👤 ' + usuario.nome;
+            }
+            // Registra o evento de logout (funciona em dashboard e admin)
             document.getElementById('btnSair').addEventListener('click', fazerLogout);
-            
+
             // Mostrar botão admin se for admin
             if (usuario.papel === 'admin' && document.getElementById('btnAdmin')) {
                 document.getElementById('btnAdmin').style.display = 'block';
@@ -209,8 +214,8 @@ if (document.getElementById('btnSair')) {
     }
 }
 
-// Verificar autenticação no admin
-if (document.getElementById('abaUsuarios')) {
+// Verificar autenticação no admin (CORRIGIDO: abaUsuarios -> secaoUsuarios)
+if (document.getElementById('secaoUsuarios')) {
     if (!verificarAutenticacao()) {
         window.location.href = 'index.html';
     } else {
