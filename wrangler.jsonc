@@ -1,0 +1,17 @@
+﻿{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "lista",
+  "main": "src/worker.js",
+  "compatibility_date": "2025-11-09",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "lista_db",
+      "database_id": "9b5dc7a3-f464-4e08-ac22-ad7d903e1912"
+    }
+  ]
+}
