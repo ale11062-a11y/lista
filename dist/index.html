@@ -3,10 +3,281 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lista</title>
+  <title>Orçamentos</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+    h1 { text-align: center; margin-bottom: 20px; color: #333; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .form-card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .form-card h2 { margin-bottom: 15px; color: #444; font-size: 18px; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 14px; color: #555; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
+    .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-danger { background: #dc2626; color: #fff; }
+    .btn-secondary { background: #6b7280; color: #fff; }
+    .btn:hover { opacity: 0.9; }
+    .item-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .item-row input { flex: 1; }
+    .item-row .item-qtd { max-width: 80px; }
+    .item-row .item-preco { max-width: 120px; }
+    .item-row button { padding: 6px 10px; background: #dc2626; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    .total-box { text-align: right; font-size: 18px; font-weight: bold; margin-top: 10px; color: #333; }
+    .list-card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .list-card h2 { margin-bottom: 15px; color: #444; font-size: 18px; }
+    .orcamento-item { border: 1px solid #e0e0e0; border-radius: 6px; padding: 15px; margin-bottom: 12px; }
+    .orcamento-item h3 { font-size: 16px; color: #333; margin-bottom: 6px; }
+    .orcamento-item .info { font-size: 13px; color: #777; margin-bottom: 6px; }
+    .orcamento-item .valor { font-size: 18px; font-weight: bold; color: #16a34a; }
+    .orcamento-item .status { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+    .status-pendente { background: #fef3c7; color: #92400e; }
+    .status-aprovado { background: #d1fae5; color: #065f46; }
+    .status-rejeitado { background: #fee2e2; color: #991b1b; }
+    .orcamento-actions { margin-top: 10px; display: flex; gap: 8px; }
+    .orcamento-actions button { padding: 6px 12px; font-size: 13px; }
+    .empty { text-align: center; color: #999; padding: 30px; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .toolbar .sync-info { font-size: 12px; color: #888; }
+    .toolbar .sync-ok { color: #16a34a; }
+    .toolbar .sync-pending { color: #d97706; }
+  </style>
 </head>
 <body>
-  <h1>Lista</h1>
-  <p>App a correr na Cloudflare!</p>
+  <div class="container">
+    <h1>Orçamentos</h1>
+    <div class="toolbar">
+      <div>
+        <button class="btn btn-secondary" onclick="restaurarD1()">Restaurar do Backup</button>
+      </div>
+      <div class="sync-info" id="syncInfo">Sem sincronizacao</div>
+    </div>
+    <div class="form-card" id="formCard">
+      <h2 id="formTitle">Novo Orcamento</h2>
+      <div class="form-group">
+        <label>Cliente</label>
+        <input type="text" id="cliente" placeholder="Nome do cliente">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Data</label>
+          <input type="date" id="data">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="status">
+            <option value="pendente">Pendente</option>
+            <option value="aprovado">Aprovado</option>
+            <option value="rejeitado">Rejeitado</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Itens</label>
+        <div id="itensContainer"></div>
+        <button class="btn btn-secondary" onclick="adicionarItem()" style="margin-top:8px;font-size:13px;">+ Adicionar Item</button>
+      </div>
+      <div class="form-group">
+        <label>Observacoes</label>
+        <textarea id="observacoes" rows="2" placeholder="Notas adicionais..."></textarea>
+      </div>
+      <div class="total-box" id="totalBox">Total: R$ 0,00</div>
+      <div style="display:flex;gap:10px;margin-top:15px;">
+        <button class="btn btn-primary" onclick="salvarOrcamento()">Salvar</button>
+        <button class="btn btn-secondary" onclick="cancelarEdicao()">Cancelar</button>
+      </div>
+    </div>
+    <div class="list-card">
+      <h2>Orcamentos Salvos</h2>
+      <div id="listaOrcamentos"></div>
+    </div>
+  </div>
+  <script>
+    const USUARIO_ID = "user1";
+    let editandoId = null;
+
+    function lerLocal() {
+      return JSON.parse(localStorage.getItem("orcamentos") || "[]");
+    }
+    function salvarLocal(orcamentos) {
+      localStorage.setItem("orcamentos", JSON.stringify(orcamentos));
+    }
+
+    async function backupD1() {
+      const orcamentos = lerLocal();
+      try {
+        for (const orc of orcamentos) {
+          await fetch("/api/dados", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              id: orc.id,
+              usuario_id: USUARIO_ID,
+              conteudo: JSON.stringify(orc)
+            })
+          });
+        }
+        document.getElementById("syncInfo").textContent = "Backup sincronizado";
+        document.getElementById("syncInfo").className = "sync-info sync-ok";
+      } catch (err) {
+        document.getElementById("syncInfo").textContent = "Backup pendente (offline)";
+        document.getElementById("syncInfo").className = "sync-info sync-pending";
+      }
+    }
+
+    async function restaurarD1() {
+      if (!confirm("Substituir dados locais pelos do backup na nuvem?")) return;
+      try {
+        const res = await fetch("/api/dados?usuario_id=" + USUARIO_ID);
+        const dados = await res.json();
+        const orcamentos = dados.map(d => JSON.parse(d.conteudo));
+        salvarLocal(orcamentos);
+        renderLista();
+        alert("Dados restaurados com sucesso!");
+      } catch (err) {
+        alert("Erro ao restaurar: " + err.message);
+      }
+    }
+
+    function adicionarItem(descricao, quantidade, preco) {
+      descricao = descricao || "";
+      quantidade = quantidade || 1;
+      preco = preco || 0;
+      const container = document.getElementById("itensContainer");
+      const row = document.createElement("div");
+      row.className = "item-row";
+      row.innerHTML =
+        '<input type="text" class="item-desc" placeholder="Descricao" value="' + descricao + '">' +
+        '<input type="number" class="item-qtd" placeholder="Qtd" value="' + quantidade + '" min="1" onchange="calcularTotal()">' +
+        '<input type="number" class="item-preco" placeholder="Preco" value="' + preco + '" min="0" step="0.01" onchange="calcularTotal()">' +
+        '<button onclick="this.parentElement.remove(); calcularTotal();">X</button>';
+      container.appendChild(row);
+      calcularTotal();
+    }
+
+    function calcularTotal() {
+      let total = 0;
+      document.querySelectorAll(".item-row").forEach(function(row) {
+        const qtd = parseFloat(row.querySelector(".item-qtd").value) || 0;
+        const preco = parseFloat(row.querySelector(".item-preco").value) || 0;
+        total += qtd * preco;
+      });
+      document.getElementById("totalBox").textContent = "Total: R$ " + total.toFixed(2).replace(".", ",");
+      return total;
+    }
+
+    function getItens() {
+      const itens = [];
+      document.querySelectorAll(".item-row").forEach(function(row) {
+        const desc = row.querySelector(".item-desc").value.trim();
+        if (desc) {
+          itens.push({
+            descricao: desc,
+            quantidade: parseFloat(row.querySelector(".item-qtd").value) || 1,
+            preco: parseFloat(row.querySelector(".item-preco").value) || 0
+          });
+        }
+      });
+      return itens;
+    }
+    function salvarOrcamento() {
+      const cliente = document.getElementById("cliente").value.trim();
+      if (!cliente) { alert("Coloca o nome do cliente."); return; }
+      const itens = getItens();
+      if (itens.length === 0) { alert("Adiciona pelo menos um item."); return; }
+      const orcamentos = lerLocal();
+      const id = editandoId || Date.now().toString();
+      const total = calcularTotal();
+      const orcamento = {
+        id: id,
+        cliente: cliente,
+        data: document.getElementById("data").value || new Date().toISOString().split("T")[0],
+        status: document.getElementById("status").value,
+        itens: itens,
+        observacoes: document.getElementById("observacoes").value.trim(),
+        total: total
+      };
+      if (editandoId) {
+        const idx = orcamentos.findIndex(function(o) { return o.id === editandoId; });
+        orcamentos[idx] = orcamento;
+      } else {
+        orcamentos.push(orcamento);
+      }
+      salvarLocal(orcamentos);
+      backupD1();
+      renderLista();
+      limparForm();
+    }
+
+    function limparForm() {
+      editandoId = null;
+      document.getElementById("formTitle").textContent = "Novo Orcamento";
+      document.getElementById("cliente").value = "";
+      document.getElementById("data").value = "";
+      document.getElementById("status").value = "pendente";
+      document.getElementById("observacoes").value = "";
+      document.getElementById("itensContainer").innerHTML = "";
+      adicionarItem();
+      calcularTotal();
+    }
+
+    function cancelarEdicao() { limparForm(); }
+
+    function editarOrcamento(id) {
+      const orcamentos = lerLocal();
+      const orc = orcamentos.find(function(o) { return o.id === id; });
+      if (!orc) return;
+      editandoId = id;
+      document.getElementById("formTitle").textContent = "Editar Orcamento";
+      document.getElementById("cliente").value = orc.cliente;
+      document.getElementById("data").value = orc.data;
+      document.getElementById("status").value = orc.status;
+      document.getElementById("observacoes").value = orc.observacoes || "";
+      document.getElementById("itensContainer").innerHTML = "";
+      orc.itens.forEach(function(item) {
+        adicionarItem(item.descricao, item.quantidade, item.preco);
+      });
+      calcularTotal();
+      window.scrollTo(0, 0);
+    }
+
+    function excluirOrcamento(id) {
+      if (!confirm("Eliminar este orcamento?")) return;
+      let orcamentos = lerLocal();
+      orcamentos = orcamentos.filter(function(o) { return o.id !== id; });
+      salvarLocal(orcamentos);
+      backupD1();
+      renderLista();
+    }
+
+    function renderLista() {
+      const orcamentos = lerLocal().sort(function(a, b) { return b.data.localeCompare(a.data); });
+      const container = document.getElementById("listaOrcamentos");
+      if (orcamentos.length === 0) {
+        container.innerHTML = '<div class="empty">Nenhum orcamento criado ainda.</div>';
+        return;
+      }
+      container.innerHTML = orcamentos.map(function(orc) {
+        return '<div class="orcamento-item">' +
+          '<h3>' + orc.cliente + '</h3>' +
+          '<div class="info">Data: ' + orc.data + ' - <span class="status status-' + orc.status + '">' + orc.status.charAt(0).toUpperCase() + orc.status.slice(1) + '</span></div>' +
+          '<div class="info">Itens: ' + orc.itens.length + '</div>' +
+          (orc.observacoes ? '<div class="info">Obs: ' + orc.observacoes + '</div>' : '') +
+          '<div class="valor">R$ ' + orc.total.toFixed(2).replace(".", ",") + '</div>' +
+          '<div class="orcamento-actions">' +
+            '<button class="btn btn-secondary" onclick="editarOrcamento(\'' + orc.id + '\')">Editar</button>' +
+            '<button class="btn btn-danger" onclick="excluirOrcamento(\'' + orc.id + '\')">Eliminar</button>' +
+          '</div>' +
+        '</div>';
+      }).join("");
+    }
+
+    document.getElementById("data").value = new Date().toISOString().split("T")[0];
+    adicionarItem();
+    renderLista();
+  </script>
 </body>
 </html>
